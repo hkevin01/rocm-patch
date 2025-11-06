@@ -37,8 +37,8 @@
 
 Also known as:
 - **ROCm RDNA Fix** - Colloquial name
-- **Consumer GPU Stability Patch** - Descriptive name
-- **ROCm 6.2+ RDNA Workaround** - Technical name
+- **RDNA Consumer GPU Stability Patch** - Descriptive name (what it does)
+- **ROCm 6.2+ RDNA1/2 Memory Workaround** - Technical name (what it fixes)
 
 ### Why This Project Exists
 
@@ -159,6 +159,32 @@ graph TD
 - **100% crash rate** on spatial convolutions
 - **10-20x performance loss** with CPU fallback workarounds
 - **Multiple ROCm versions** affected (6.2+, 7.0+)
+
+### How This Problem Was Discovered
+
+This critical issue was discovered through real-world PyTorch deep learning projects:
+
+**Discovery Timeline**:
+1. **EEG2025 Project (September 2024)**: Brain-computer interface model training with spatial convolutions crashed immediately on RX 5600 XT
+   - Error: `HSA_STATUS_ERROR_MEMORY_APERTURE_VIOLATION` during EEGNeX spatial convolution
+   - Pattern: `Conv2d(1, 32, (64, 1))` → `squeeze(2)` → immediate crash
+   - PyTorch 2.5.1+rocm6.2 on Ubuntu 22.04
+
+2. **Thermal Object Detection Project (October 2024)**: YOLO training on thermal images failed on every batch
+   - Error: "Page not present or supervisor privilege" in kernel logs
+   - Pattern: Any `Conv2d` operation during forward pass crashed
+   - PyTorch with ROCm 6.2 on RX 6700 XT
+
+**Investigation Process**:
+- Isolated problem to PyTorch convolutional operations
+- Tested on multiple RDNA1/2 GPUs (RX 5600 XT, RX 6700 XT) → 100% crash
+- Tested on RDNA3 (RX 7900 XT) → worked fine
+- Traced crash to ROCm 6.2+ memory coherency changes
+- Found ROCm GitHub Issue #5051 with 401+ affected users
+- Discovered root cause: RDNA1/2 lacks SVM hardware for coherent memory
+
+**Key Insight**:
+PyTorch's heavy use of Conv2d operations exposed the memory coherency bug that affected all RDNA1/2 consumer GPUs after ROCm 6.2+. Basic tensor operations (matmul, element-wise) worked fine, but **any convolutional operation crashed immediately**, making deep learning impossible on these GPUs.
 
 ---
 

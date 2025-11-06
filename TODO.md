@@ -1,592 +1,339 @@
 # RMCP Testing & Validation TODO
 
 **Project**: RMCP (RDNA Memory Coherency Patch) v1.0  
-**Last Updated**: November 6, 2024  
-**Current Phase**: Phase 2 - Patch Installation
+**Date**: November 6, 2024  
+**Current Phase**: Testing Phase 1 Complete - Ready for Phase 2
 
 ---
 
-## 📊 Overall Progress
+## 📊 Progress Overview
 
 ```
-Phase 1: Pre-Patch Baseline        ✅ COMPLETE (100%)
-Phase 2: Patch Installation         ⏳ IN PROGRESS (0%)
-Phase 3: Post-Patch Validation      ⭕ PENDING (0%)
-Phase 4: Real-World Projects        ⭕ PENDING (0%)
-Phase 5: Long-Term Stability        ⭕ PENDING (0%)
+Phase 1: Testing Framework    ✅ COMPLETE (100%)
+Phase 2: Patch Installation    ⏳ READY    (0%)
+Phase 3: Validation           ⭕ PENDING  (0%)
+Phase 4: Real Projects        ⭕ PENDING  (0%)
+Phase 5: Stability            ⭕ PENDING  (0%)
 
-Overall: 20% Complete (1/5 phases)
-```
-
----
-
-## Phase 1: Pre-Patch Baseline ✅ COMPLETE
-
-**Goal**: Validate that the crash exists on unpatched ROCm  
-**Status**: ✅ Complete  
-**Date**: November 6, 2024
-
-### Completed Tasks
-
-- [x] Verify GPU is RDNA1/2 (confirmed: RX 5600 XT gfx1010)
-- [x] Confirm PyTorch with ROCm installed (2.5.1+rocm6.2)
-- [x] Run baseline test suite
-- [x] Document crash on convolutions
-- [x] Capture error message (HSA_STATUS_ERROR_MEMORY_APERTURE_VIOLATION)
-- [x] Confirm 100% crash rate on Conv2d operations
-- [x] Create testing framework (3 test suites, 1,500+ lines)
-- [x] Document expected results in TESTING.md
-
-### Test Results Summary
-
-```
-Test 1: Basic tensor operations       ✅ PASS (0.70s)
-Test 2: Convolutional operations       ❌ CRASH (exit 134)
-Error: HSA_STATUS_ERROR_MEMORY_APERTURE_VIOLATION (0x29)
-
-Baseline validates: RMCP is needed to fix this crash
+Overall: 20% (1/5 phases)
 ```
 
 ---
 
-## Phase 2: Patch Installation ⏳ IN PROGRESS
+## Phase 1: Testing Framework ✅ COMPLETE
 
-**Goal**: Install RMCP patches to fix ROCm  
-**Status**: ⏳ Ready to Start  
-**Estimated Time**: 2-4 hours
+### 1.1 Create Test Suites ✅
+- [x] Create `test_real_world_workloads.py` (700 lines)
+- [x] Create `test_project_integration.sh` (400 lines)
+- [x] Create `docs/TESTING.md` documentation
+- [x] Create `TESTING_PHASE_COMPLETE.md` summary
 
-### Step 1: Prepare Environment
+### 1.2 Baseline Testing ✅
+- [x] Run tests on unpatched ROCm
+- [x] Confirm crash on Conv2d operations
+- [x] Document error messages
+- [x] Validate 100% crash rate
 
-- [ ] Ensure 10GB+ free disk space
-  ```bash
-  df -h /opt
-  ```
-- [ ] Verify ROCm 6.2 or 7.0 installed
-  ```bash
-  ls /opt/rocm*
-  ```
-- [ ] Check kernel headers installed
-  ```bash
-  ls /usr/src/linux-headers-$(uname -r)
-  ```
-- [ ] Backup current ROCm (optional but recommended)
-  ```bash
-  sudo cp -r /opt/rocm /opt/rocm-backup-$(date +%Y%m%d)
-  ```
+### 1.3 Documentation ✅
+- [x] Document expected results
+- [x] Create performance metrics tables
+- [x] Write troubleshooting guide
+- [x] Define 5-phase test plan
 
-### Step 2: Run ROCm Source Patcher
+---
 
-**Script**: `scripts/patch_rocm_source.sh`  
-**Time**: 2-3 hours  
-**Disk**: ~10GB
+## Phase 2: Patch Installation ⏳ READY
 
-- [ ] Navigate to project directory
-  ```bash
-  cd /home/kevin/Projects/rocm-patch
-  ```
-- [ ] Review patcher script
-  ```bash
-  cat scripts/patch_rocm_source.sh | head -50
-  ```
-- [ ] Run patcher with sudo
-  ```bash
-  sudo ./scripts/patch_rocm_source.sh
-  ```
-- [ ] Monitor progress (will show):
-  - [ ] Installing dependencies (cmake, git, build-essential)
-  - [ ] Creating workspace at /tmp/rocm-build
-  - [ ] Cloning ROCm sources (HIP, ROCR, ROCT, CLR)
-  - [ ] Creating patch files inline
-  - [ ] Applying patches to source code
-  - [ ] Building ROCT-Thunk-Interface (~10 min)
-  - [ ] Building ROCR-Runtime (~15 min)
-  - [ ] Building HIP/CLR (~90 min)
-  - [ ] Installing to /opt/rocm-patched
-  - [ ] Creating environment script
-  - [ ] Running basic tests
+### 2.1 Prepare Environment
+- [ ] **Task**: Check available disk space
+  - **Command**: `df -h /opt`
+  - **Required**: At least 15GB free
+  - **Time**: 1 minute
+  
+- [ ] **Task**: Install build dependencies
+  - **Command**: Check if cmake, gcc, g++ installed
+  - **Action**: `sudo apt install cmake build-essential`
+  - **Time**: 5 minutes
 
-- [ ] Verify installation completed successfully
-  ```bash
-  ls -la /opt/rocm-patched/lib/libamdhip64.so
-  ```
+- [ ] **Task**: Backup current ROCm
+  - **Command**: `sudo cp -r /opt/rocm /opt/rocm.backup`
+  - **Time**: 5 minutes
 
-### Step 3: Run Kernel Module Patcher
+### 2.2 ROCm Source Patching (2-3 hours)
+- [ ] **Task**: Run patch script
+  - **Command**: `sudo ./scripts/patch_rocm_source.sh`
+  - **Expected**: Clone repos, apply patches, build ROCm
+  - **Time**: 2-3 hours
+  - **Monitor**: Check for build errors
 
-**Script**: `scripts/patch_kernel_module.sh`  
-**Time**: 5-10 minutes  
-**Reboot**: Required after this step
+- [ ] **Task**: Verify patched installation
+  - **Command**: `ls -la /opt/rocm-patched`
+  - **Expected**: Directory exists with lib/, include/, bin/
+  - **Time**: 1 minute
 
-- [ ] Navigate to project directory
-  ```bash
-  cd /home/kevin/Projects/rocm-patch
-  ```
-- [ ] Run kernel patcher with sudo
-  ```bash
-  sudo ./scripts/patch_kernel_module.sh
-  ```
-- [ ] Monitor progress (will show):
-  - [ ] Checking kernel headers
-  - [ ] Creating kernel patch file
-  - [ ] Downloading amdgpu driver source
-  - [ ] Applying memory coherency patch
-  - [ ] Building amdgpu.ko module
-  - [ ] Backing up original module
-  - [ ] Installing patched module
-  - [ ] Creating modprobe configuration
+### 2.3 Kernel Module Patching (10 minutes)
+- [ ] **Task**: Run kernel patch script
+  - **Command**: `sudo ./scripts/patch_kernel_module.sh`
+  - **Expected**: Patch amdgpu module, install
+  - **Time**: 10 minutes
 
-- [ ] Verify module installation
-  ```bash
-  modinfo amdgpu | grep -i filename
-  ```
+- [ ] **Task**: Verify module backup
+  - **Command**: `ls -la /lib/modules/$(uname -r)/kernel/drivers/gpu/drm/amd/amdgpu/amdgpu.ko.orig`
+  - **Expected**: Backup file exists
+  - **Time**: 1 minute
 
-### Step 4: Reboot System
+### 2.4 System Configuration
+- [ ] **Task**: Reboot system
+  - **Command**: `sudo reboot`
+  - **Required**: For kernel module to load
+  - **Time**: 2 minutes
 
-**Required**: Kernel module changes require reboot
+- [ ] **Task**: After reboot, load environment
+  - **Command**: `source /etc/profile.d/rocm-patched.sh`
+  - **Expected**: ROCM_PATH set to /opt/rocm-patched
+  - **Time**: 1 second
 
-- [ ] Save all work in other projects
-- [ ] Commit any uncommitted changes
-- [ ] Reboot system
-  ```bash
-  sudo reboot
-  ```
-- [ ] After reboot, verify login works
-- [ ] Open terminal
-
-### Step 5: Configure Environment
-
-**Goal**: Set up environment variables for patched ROCm
-
-- [ ] Source RMCP environment script
-  ```bash
-  source /etc/profile.d/rocm-patched.sh
-  ```
-- [ ] Verify ROCM_PATH set correctly
-  ```bash
-  echo $ROCM_PATH
-  # Should show: /opt/rocm-patched
-  ```
-- [ ] Verify HSA_USE_SVM disabled
-  ```bash
-  echo $HSA_USE_SVM
-  # Should show: 0
-  ```
-- [ ] Verify HSA_XNACK disabled
-  ```bash
-  echo $HSA_XNACK
-  # Should show: 0
-  ```
-- [ ] Check LD_LIBRARY_PATH includes patched libs
-  ```bash
-  echo $LD_LIBRARY_PATH | grep rocm-patched
-  ```
-- [ ] Add environment script to your shell profile
-  ```bash
-  echo 'source /etc/profile.d/rocm-patched.sh' >> ~/.bashrc
-  ```
-
-### Step 6: Verify Patched ROCm
-
-- [ ] Check rocminfo works
-  ```bash
-  rocminfo | grep "Name:"
-  # Should show your GPU
-  ```
-- [ ] Check HIP compiler
-  ```bash
-  hipcc --version
-  ```
-- [ ] Verify GPU is detected
-  ```bash
-  rocm-smi
-  ```
-- [ ] Check for RDNA patches in library
-  ```bash
-  strings /opt/rocm-patched/lib/libamdhip64.so | grep -i rdna
-  ```
+- [ ] **Task**: Verify environment variables
+  - **Commands**:
+    ```bash
+    echo $ROCM_PATH        # Should be /opt/rocm-patched
+    echo $HSA_USE_SVM      # Should be 0
+    echo $HSA_XNACK        # Should be 0
+    ```
+  - **Time**: 1 minute
 
 ---
 
 ## Phase 3: Post-Patch Validation ⭕ PENDING
 
-**Goal**: Verify RMCP patches fix the crashes  
-**Status**: ⭕ Pending Phase 2 completion  
-**Estimated Time**: 30 minutes
+### 3.1 Basic Validation
+- [ ] **Task**: Check ROCm info
+  - **Command**: `rocminfo | grep "Name:"`
+  - **Expected**: Shows AMD Radeon RX 5600 XT
+  - **Time**: 1 minute
 
-### Step 1: Run Integration Tests
+- [ ] **Task**: Check HIP version
+  - **Command**: `hipconfig --version`
+  - **Expected**: Shows patched version
+  - **Time**: 1 minute
 
-- [ ] Navigate to project
-  ```bash
-  cd /home/kevin/Projects/rocm-patch
-  ```
-- [ ] Run project integration test
-  ```bash
-  ./tests/test_project_integration.sh
-  ```
-- [ ] Verify all tests pass:
-  - [ ] System-wide RMCP verification
-  - [ ] PyTorch GPU test
-  - [ ] GPU memory allocation test
-  - [ ] Kernel log analysis (no errors)
-  - [ ] EEG2025 project detected
-  - [ ] Thermal project detected
+- [ ] **Task**: Verify kernel module loaded
+  - **Command**: `lsmod | grep amdgpu`
+  - **Expected**: amdgpu module loaded
+  - **Time**: 1 minute
 
-### Step 2: Run Comprehensive Workload Tests
+### 3.2 Integration Tests
+- [ ] **Task**: Run integration test suite
+  - **Command**: `./tests/test_project_integration.sh`
+  - **Expected**: All 8 tests pass
+  - **Time**: 5 minutes
 
-**Critical**: This test crashed at Test #2 before RMCP
+- [ ] **Task**: Check for kernel errors
+  - **Command**: `sudo dmesg | tail -50 | grep -i "amdgpu\|memory"`
+  - **Expected**: No memory fault errors
+  - **Time**: 1 minute
 
-- [ ] Run real-world workload tests
-  ```bash
-  cd /home/kevin/Projects/rocm-patch
-  python3 tests/test_real_world_workloads.py
-  ```
-- [ ] Verify all 10 tests pass:
-  - [ ] Test 1: PyTorch Basic Operations (was ✅ before)
-  - [ ] Test 2: PyTorch Convolutions (was ❌ CRASH before) **CRITICAL**
-  - [ ] Test 3: PyTorch Training Loop
-  - [ ] Test 4: YOLO Operations
-  - [ ] Test 5: Transformer Operations
-  - [ ] Test 6: Mixed Precision
-  - [ ] Test 7: Memory Stress Test
-  - [ ] Test 8: Kernel Fault Detection
-  - [ ] Test 9: Patch Verification
-  - [ ] Test 10: EEG Tensor Reshaping **CRITICAL**
+### 3.3 Comprehensive Workload Tests
+- [ ] **Task**: Run real-world workload tests
+  - **Command**: `python3 tests/test_real_world_workloads.py`
+  - **Expected**: 10/10 tests pass (vs 1/10 before)
+  - **Critical**: Test #2 (convolutions) must pass
+  - **Critical**: Test #10 (EEG reshaping) must pass
+  - **Time**: 10 minutes
 
-- [ ] Verify success rate is 100% (was 10% before)
-- [ ] Confirm no core dumps
-- [ ] Check no memory errors in dmesg
-  ```bash
-  sudo dmesg | tail -50 | grep -i "memory\|fault"
-  ```
-
-### Step 3: Run Basic ROCm Tests
-
-- [ ] Run basic patched ROCm test suite
-  ```bash
-  cd /home/kevin/Projects/rocm-patch
-  ./scripts/test_patched_rocm.sh
-  ```
-- [ ] Verify all categories pass:
-  - [ ] Environment variables
-  - [ ] rocminfo output
-  - [ ] HIP compilation
-  - [ ] Memory allocation
-  - [ ] PyTorch GPU detection
-  - [ ] Kernel fault check
-  - [ ] Patch verification
-
-### Step 4: Regression Testing
-
-- [ ] Verify basic operations still work
-  ```bash
-  python3 -c "import torch; x=torch.randn(100,100).cuda(); print(f'✓ GPU: {torch.cuda.get_device_name(0)}')"
-  ```
-- [ ] Check no new errors introduced
-- [ ] Verify performance is maintained
+- [ ] **Task**: Verify no crashes
+  - **Expected**: All tests complete without core dumps
+  - **Expected**: No HSA_STATUS_ERROR messages
+  - **Time**: Included in test run
 
 ---
 
 ## Phase 4: Real-World Projects ⭕ PENDING
 
-**Goal**: Test RMCP in actual production projects  
-**Status**: ⭕ Pending Phase 3 completion  
-**Estimated Time**: 1-2 hours
+### 4.1 EEG2025 Project Testing
+- [ ] **Task**: Navigate to project
+  - **Command**: `cd /home/kevin/Projects/eeg2025`
+  - **Time**: 1 second
 
-### Project 1: EEG2025 - Brain Signal Classification
+- [ ] **Task**: Check GPU detection
+  - **Command**: `python3 -c "import torch; print(torch.cuda.is_available())"`
+  - **Expected**: True
+  - **Time**: 5 seconds
 
-**Path**: `/home/kevin/Projects/eeg2025`  
-**Problem**: Spatial convolution crash on `Conv2d(1, 32, (64, 1))`  
-**Expected**: GPU training works, 10-20x faster than CPU
+- [ ] **Task**: Test spatial convolution (critical test)
+  - **Create test file**: `test_spatial_conv.py`
+  - **Code**:
+    ```python
+    import torch
+    import torch.nn as nn
+    
+    eeg_input = torch.randn(16, 1, 64, 256).cuda()
+    spatial_conv = nn.Conv2d(1, 32, (64, 1)).cuda()
+    output = spatial_conv(eeg_input)
+    output = output.squeeze(2)  # This crashed before RMCP
+    print("✅ Spatial convolution SUCCESS!")
+    ```
+  - **Expected**: No crash, prints success message
+  - **Before RMCP**: 100% crash
+  - **Time**: 2 minutes
 
-#### Setup
+- [ ] **Task**: Run short training test (5 epochs)
+  - **Command**: Run EEGNeX training with small batch
+  - **Expected**: Training completes without crash
+  - **Expected**: GPU utilization >90%
+  - **Time**: 10-15 minutes
 
-- [ ] Navigate to eeg2025 project
-  ```bash
-  cd /home/kevin/Projects/eeg2025
-  ```
-- [ ] Verify environment
-  ```bash
-  source /etc/profile.d/rocm-patched.sh
-  echo $ROCM_PATH
-  ```
-- [ ] Check PyTorch detects GPU
-  ```bash
-  python3 -c "import torch; print(f'GPU: {torch.cuda.is_available()}')"
-  ```
+- [ ] **Task**: Monitor GPU during training
+  - **Command**: `watch -n 1 rocm-smi`
+  - **Expected**: GPU memory allocated, compute active
+  - **Time**: During training
 
-#### Test Challenge 1: EEGNeX Model
+### 4.2 Thermal Object Detection Project Testing
+- [ ] **Task**: Navigate to project
+  - **Command**: `cd /home/kevin/Projects/robust-thermal-image-object-detection`
+  - **Time**: 1 second
 
-- [ ] Locate training script
-  ```bash
-  ls *train*.py *main*.py *run*.py
-  ```
-- [ ] Review spatial convolution code
-  ```bash
-  grep -r "Conv2d.*64.*1" .
-  ```
-- [ ] Run short training test (1-2 epochs)
-  ```bash
-  # Adjust command based on project structure
-  python3 train.py --epochs 2 --device cuda
-  ```
-- [ ] Verify training completes without crash
-- [ ] Check GPU utilization
-  ```bash
-  rocm-smi --showuse
-  ```
-- [ ] Monitor for crashes
-  ```bash
-  # In another terminal
-  watch -n 1 'sudo dmesg | tail -10'
-  ```
+- [ ] **Task**: Test YOLO backbone (critical test)
+  - **Create test file**: `test_yolo_backbone.py`
+  - **Code**:
+    ```python
+    import torch
+    import torch.nn as nn
+    
+    backbone = nn.Sequential(
+        nn.Conv2d(3, 32, 3, padding=1),
+        nn.BatchNorm2d(32),
+        nn.LeakyReLU(0.1),
+        nn.Conv2d(32, 64, 3, padding=1),
+        nn.BatchNorm2d(64),
+        nn.LeakyReLU(0.1),
+    ).cuda()
+    
+    x = torch.randn(2, 3, 416, 416).cuda()
+    output = backbone(x)  # This crashed before RMCP
+    torch.cuda.synchronize()
+    print("✅ YOLO backbone SUCCESS!")
+    ```
+  - **Expected**: No crash, prints success message
+  - **Before RMCP**: 100% crash on first forward pass
+  - **Time**: 2 minutes
 
-#### Test Challenge 2: SAM+TCN Model
+- [ ] **Task**: Run short training test (10 batches)
+  - **Command**: Run YOLO training with small dataset
+  - **Expected**: Training completes without crash
+  - **Expected**: No "Page not present" errors
+  - **Time**: 10-15 minutes
 
-- [ ] Run SAM+TCN training test
-- [ ] Verify temporal convolutions work
-- [ ] Check no memory faults
+- [ ] **Task**: Check kernel logs after training
+  - **Command**: `sudo dmesg | tail -100 | grep -i "memory fault"`
+  - **Expected**: No memory fault messages
+  - **Time**: 1 minute
 
-#### Validation
+### 4.3 Performance Validation
+- [ ] **Task**: Compare training speeds
+  - **Measure**: EEG2025 epoch time (GPU vs historical CPU)
+  - **Expected**: 10-20x faster with GPU
+  - **Time**: During training
 
-- [ ] Training completes successfully
-- [ ] GPU utilization >90%
-- [ ] No crashes or core dumps
-- [ ] No memory errors in dmesg
-- [ ] Performance improvement documented
-
-### Project 2: Thermal Object Detection - YOLO Training
-
-**Path**: `/home/kevin/Projects/robust-thermal-image-object-detection`  
-**Problem**: "Page not present" on every YOLO training batch  
-**Expected**: 99% stability, 8-10x speedup
-
-#### Setup
-
-- [ ] Navigate to thermal project
-  ```bash
-  cd /home/kevin/Projects/robust-thermal-image-object-detection
-  ```
-- [ ] Verify environment
-  ```bash
-  source /etc/profile.d/rocm-patched.sh
-  ```
-- [ ] Check YOLO model files exist
-  ```bash
-  ls *yolo* *train* *detect*
-  ```
-
-#### Test YOLO Training
-
-- [ ] Locate training script
-- [ ] Run short training test (10-20 batches)
-  ```bash
-  # Adjust command based on project structure
-  python3 train.py --epochs 1 --batch 4 --device cuda
-  ```
-- [ ] Verify no "page not present" errors
-- [ ] Check no memory access faults
-- [ ] Monitor kernel log
-  ```bash
-  sudo dmesg -w
-  ```
-
-#### Test YOLO Inference
-
-- [ ] Run detection on sample images
-- [ ] Verify GPU acceleration works
-- [ ] Check output quality
-
-#### Validation
-
-- [ ] Training completes without crashes
-- [ ] No page fault errors
-- [ ] GPU utilization high (>80%)
-- [ ] 8-10x faster than CPU fallback
-- [ ] Detection accuracy maintained
+- [ ] **Task**: Monitor memory usage
+  - **Command**: `rocm-smi --showmeminfo`
+  - **Expected**: Memory allocated and released properly
+  - **Time**: 2 minutes
 
 ---
 
 ## Phase 5: Long-Term Stability ⭕ PENDING
 
-**Goal**: Ensure RMCP is production-ready  
-**Status**: ⭕ Pending Phase 4 completion  
-**Estimated Time**: 24+ hours
+### 5.1 Extended Training Test
+- [ ] **Task**: Run 24-hour training session
+  - **Project**: Choose EEG2025 or thermal
+  - **Expected**: No crashes, no degradation
+  - **Time**: 24+ hours
 
-### Extended Training Test
+- [ ] **Task**: Monitor system during long run
+  - **Check every 4 hours**:
+    - GPU temperature
+    - Memory usage
+    - Kernel logs for errors
+  - **Time**: Periodic checks
 
-- [ ] Set up 24-hour training session
-  ```bash
-  cd /home/kevin/Projects/eeg2025
-  nohup python3 train.py --epochs 100 > training.log 2>&1 &
-  ```
-- [ ] Monitor GPU temperature
-  ```bash
-  watch -n 5 'rocm-smi --showtemp'
-  ```
-- [ ] Check memory usage periodically
-  ```bash
-  watch -n 60 'rocm-smi --showmeminfo'
-  ```
-- [ ] Monitor for crashes
-  ```bash
-  tail -f training.log
-  ```
+### 5.2 Stress Testing
+- [ ] **Task**: Run memory stress test
+  - **Command**: From `test_real_world_workloads.py`
+  - **Test**: Allocate 50% GPU memory repeatedly
+  - **Expected**: No leaks, no crashes
+  - **Time**: 30 minutes
 
-### Memory Leak Testing
+- [ ] **Task**: Run mixed workload test
+  - **Action**: Train multiple models simultaneously
+  - **Expected**: All complete successfully
+  - **Time**: 1 hour
 
-- [ ] Run repeated allocation/deallocation
-- [ ] Monitor GPU memory over time
-- [ ] Check for gradual memory increase
-- [ ] Verify GPU memory releases correctly
+### 5.3 Final Validation
+- [ ] **Task**: Compare results before/after RMCP
+  - **Document**:
+    - Crash rate: 100% → 0%
+    - Training speed: 1x (CPU) → 10-20x (GPU)
+    - Success rate: 0% → 99%
+  - **Time**: 30 minutes to compile results
 
-### Kernel Log Monitoring
-
-- [ ] Set up continuous monitoring
-  ```bash
-  sudo dmesg -w | tee kernel-monitor.log
-  ```
-- [ ] Check for memory fault messages
-- [ ] Look for GPU reset events
-- [ ] Verify no warnings accumulate
-
-### Performance Benchmarking
-
-- [ ] Measure training time (EEG2025)
-  - [ ] Time per epoch
-  - [ ] Samples per second
-  - [ ] GPU utilization average
-- [ ] Measure training time (Thermal YOLO)
-  - [ ] Time per epoch
-  - [ ] Batches per second
-  - [ ] GPU memory usage
-- [ ] Compare to CPU baseline
-- [ ] Document speedup achieved
-
-### Validation Metrics
-
-- [ ] Zero crashes over 24+ hours
-- [ ] No memory leaks detected
-- [ ] Stable GPU temperature
-- [ ] Consistent performance
-- [ ] No kernel warnings/errors
+- [ ] **Task**: Update TESTING.md with results
+  - **Add**: Actual test results
+  - **Add**: Performance measurements
+  - **Add**: Any issues encountered
+  - **Time**: 30 minutes
 
 ---
 
-## 📈 Success Criteria
+## 🚀 Quick Commands Reference
 
-### Phase 1 Success ✅
-- [x] Crash confirmed on unpatched ROCm
-- [x] Error documented
-- [x] Testing framework created
-
-### Phase 2 Success (To Be Determined)
-- [ ] Patches installed successfully
-- [ ] Environment configured correctly
-- [ ] No installation errors
-- [ ] Patched ROCm detected
-
-### Phase 3 Success (To Be Determined)
-- [ ] All integration tests pass
-- [ ] Test #2 (convolutions) passes (was crashing)
-- [ ] Test #10 (EEG reshaping) passes (was crashing)
-- [ ] Success rate: 100% (was 10%)
-- [ ] No regressions
-
-### Phase 4 Success (To Be Determined)
-- [ ] EEG2025 training completes without crashes
-- [ ] Thermal YOLO training completes without crashes
-- [ ] GPU utilization >90%
-- [ ] 10-20x speedup vs CPU achieved
-- [ ] No memory faults
-
-### Phase 5 Success (To Be Determined)
-- [ ] 24+ hour stability achieved
-- [ ] No memory leaks
-- [ ] Consistent performance
-- [ ] Production-ready
-
----
-
-## 🚨 Rollback Plan
-
-If patches cause issues:
-
-### Quick Rollback
-
+### Start Phase 2 (Patching)
 ```bash
-# 1. Switch back to original ROCm
-export ROCM_PATH=/opt/rocm
-export LD_LIBRARY_PATH=/opt/rocm/lib:/opt/rocm/lib64:$LD_LIBRARY_PATH
-
-# 2. Remove environment script
-sudo rm /etc/profile.d/rocm-patched.sh
-
-# 3. Restore original kernel module (if backed up)
-sudo cp /lib/modules/$(uname -r)/updates/dkms/amdgpu.ko.backup \
-        /lib/modules/$(uname -r)/updates/dkms/amdgpu.ko
-sudo depmod -a
-sudo reboot
+cd /home/kevin/Projects/rocm-patch
+sudo ./scripts/patch_rocm_source.sh      # 2-3 hours
+sudo ./scripts/patch_kernel_module.sh    # 10 minutes
+sudo reboot                               # Required
 ```
 
-### Full Removal
-
+### After Reboot (Phase 3)
 ```bash
-# Remove patched ROCm
-sudo rm -rf /opt/rocm-patched
+source /etc/profile.d/rocm-patched.sh
+cd /home/kevin/Projects/rocm-patch
+./tests/test_project_integration.sh
+python3 tests/test_real_world_workloads.py
+```
 
-# Restore original ROCm paths
-unset ROCM_PATH HSA_USE_SVM HSA_XNACK
+### Test Real Projects (Phase 4)
+```bash
+# EEG2025
+cd /home/kevin/Projects/eeg2025
+# Run training
 
-# Reboot
-sudo reboot
+# Thermal
+cd /home/kevin/Projects/robust-thermal-image-object-detection
+# Run YOLO training
 ```
 
 ---
 
-## 📝 Notes
+## 📈 Success Metrics
 
-### Important Reminders
+### Before RMCP (Confirmed)
+- ✅ Basic tensor ops: PASS
+- ❌ Convolutions: CRASH (aperture violation)
+- ❌ Training: IMPOSSIBLE
+- ❌ GPU utilization: 0%
 
-- **Always backup** before patching
-- **Reboot required** after kernel module patch
-- **Environment variables** must be set in every new shell
-- **Test incrementally** - don't skip phases
-- **Document results** - update this TODO as you progress
-
-### Troubleshooting
-
-If tests still crash after patching:
-1. Verify environment variables are set
-2. Check patched libraries are being used (`ldd`)
-3. Review kernel logs for errors
-4. Try rebooting to ensure kernel module loads
-5. See `docs/TESTING.md` for detailed troubleshooting
-
-### Time Estimates
-
-- Phase 1: ✅ Complete (2 hours)
-- Phase 2: 2-4 hours (mostly compilation)
-- Phase 3: 30 minutes (testing)
-- Phase 4: 1-2 hours (project testing)
-- Phase 5: 24+ hours (stability)
-
-**Total**: ~28-32 hours (mostly unattended)
+### After RMCP (Expected)
+- ✅ Basic tensor ops: PASS
+- ✅ Convolutions: PASS
+- ✅ Training: ENABLED
+- ✅ GPU utilization: 90%+
+- ✅ Speed: 10-20x faster
+- ✅ Crash rate: 0%
 
 ---
 
-## ✅ Completion Checklist
+**Next Action**: Start Phase 2 by running `sudo ./scripts/patch_rocm_source.sh`
 
-Final validation before marking RMCP as complete:
-
-- [ ] All 5 phases complete
-- [ ] All tests passing
-- [ ] EEG2025 project works
-- [ ] Thermal project works
-- [ ] 24+ hour stability achieved
-- [ ] Documentation updated
-- [ ] Results documented in TESTING.md
-- [ ] GitHub repository updated
-
----
-
-**Last Updated**: November 6, 2024  
-**Next Action**: Begin Phase 2 - Run `sudo ./scripts/patch_rocm_source.sh`
+**Estimated Total Time**: 4-6 hours (including 24-hour long test)
