@@ -269,6 +269,34 @@ graph TB
 
 ## 🚀 Quick Start
 
+### Step 0: Check Your Hardware (30 seconds)
+
+**Before patching, verify if you need patches:**
+
+```bash
+# Test if your GPU requires patches
+python3 tests/test_hardware_compatibility.py
+```
+
+**Exit codes:**
+- `0` ✅ GPU is compatible (RDNA3+, CDNA) - no patches needed!
+- `1` ⚠️  GPU needs patches (RDNA1/2) - continue with installation
+- `2` ❌ No AMD GPU detected - check drivers
+- `3` ❌ ROCm not installed - install ROCm first
+
+**Example output:**
+```
+🔧 ROCm 6.2+ Hardware Compatibility Test
+================================================================================
+   📊 GPU Found: AMD Radeon RX 5600 XT
+      GFX Version: gfx1010
+      Architecture: RDNA1 (RX 5000 series)
+      Compatibility: ⚠️  Needs RMCP Patch
+
+⚠️  RESULT: GPU REQUIRES PATCHES
+💡 Continue with installation steps below...
+```
+
 ### Prerequisites
 
 ```bash
@@ -715,6 +743,16 @@ Before submitting patches:
 ### Related Issues & Resources
 
 - **ROCm GitHub #5051** - Original community issue (401+ affected users)
+  - [View Issue](https://github.com/ROCm/ROCm/issues/5051)
+  - Primary discussion thread for RDNA memory coherency problems
+  - Contains extensive hardware/software compatibility data
+
+- **Hashcat #3932** - Similar HSA_STATUS_ERROR_MEMORY_APERTURE_VIOLATION
+  - [View Issue](https://github.com/hashcat/hashcat/issues/3932)
+  - Demonstrates identical failure pattern on Radeon VII (GFX906)
+  - Confirms hardware-level SVM/coherency limitations
+  - Resolved with ROCm update (validates approach)
+
 - **ROCm GitHub #5616** - Recent memory access fault reports
 - **ROCm Forums** - Community discussions
 - **AMD DevHub** - Official documentation
