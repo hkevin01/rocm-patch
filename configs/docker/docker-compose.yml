@@ -1,0 +1,75 @@
+version: '3.8'
+
+services:
+  rocm-patch-dev:
+    build:
+      context: ../..
+      dockerfile: configs/docker/Dockerfile
+      args:
+        USER_ID: ${USER_ID:-1000}
+        GROUP_ID: ${GROUP_ID:-1000}
+    container_name: rocm-patch-dev
+    image: rocm-patch:dev
+    hostname: rocm-patch-container
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    cap_add:
+      - SYS_PTRACE
+    security_opt:
+      - seccomp:unconfined
+    volumes:
+      - ../..:/workspace/rocm-patch
+      - rocm-patch-cache:/root/.cache
+      - rocm-patch-logs:/var/log/rocm-patch
+      - rocm-patch-backups:/var/backups/rocm-patches
+    environment:
+      - ROCM_PATH=/opt/rocm
+      - PYTHONUNBUFFERED=1
+      - ROCM_PATCH_AUTO=0
+      - ROCM_PATCH_VERBOSE=1
+    working_dir: /workspace/rocm-patch
+    stdin_open: true
+    tty: true
+    networks:
+      - rocm-network
+
+  rocm-patch-test:
+    build:
+      context: ../..
+      dockerfile: configs/docker/Dockerfile
+    container_name: rocm-patch-test
+    image: rocm-patch:test
+    devices:
+      - /dev/kfd:/dev/kfd
+      - /dev/dri:/dev/dri
+    group_add:
+      - video
+      - render
+    volumes:
+      - ../..:/workspace/rocm-patch:ro
+      - test-results:/workspace/rocm-patch/test_results
+    environment:
+      - ROCM_PATH=/opt/rocm
+      - PYTHONUNBUFFERED=1
+    working_dir: /workspace/rocm-patch
+    command: pytest tests/ -v --cov=src --cov-report=html
+    networks:
+      - rocm-network
+
+volumes:
+  rocm-patch-cache:
+    driver: local
+  rocm-patch-logs:
+    driver: local
+  rocm-patch-backups:
+    driver: local
+  test-results:
+    driver: local
+
+networks:
+  rocm-network:
+    driver: bridge
