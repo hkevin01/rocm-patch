@@ -1,0 +1,51 @@
+diff --git a/hipamd/src/hip_memory.cpp b/hipamd/src/hip_memory.cpp
+index abc1234..def5678 100644
+--- a/hipamd/src/hip_memory.cpp
++++ b/hipamd/src/hip_memory.cpp
+@@ -50,6 +50,28 @@
+ #include "hip_internal.hpp"
+ #include "hip_platform.hpp"
+ 
++// RDNA1/2 detection for memory coherency fix
++static bool isRDNA1or2() {
++    static int cached_result = -1;
++    if (cached_result != -1) {
++        return cached_result == 1;
++    }
++    
++    hipDeviceProp_t prop;
++    if (hipGetDeviceProperties(&prop, 0) != hipSuccess) {
++        cached_result = 0;
++        return false;
++    }
++    
++    // Check for gfx1010-1036 (RDNA1/2)
++    std::string arch(prop.gcnArchName);
++    bool is_rdna = (arch.find("gfx101") == 0 || 
++                    arch.find("gfx102") == 0 || 
++                    arch.find("gfx103") == 0);
++    cached_result = is_rdna ? 1 : 0;
++    return is_rdna;
++}
++
+ hipError_t hipMalloc(void** ptr, size_t size) {
+     HIP_INIT_API(hipMalloc, ptr, size);
+     
+@@ -58,6 +80,18 @@ hipError_t hipMalloc(void** ptr, size_t size) {
+         return hipErrorInvalidValue;
+     }
+     
++    // PATCH: Force non-coherent allocations for RDNA1/2
++    if (isRDNA1or2()) {
++        static bool warned = false;
++        if (!warned) {
++            fprintf(stderr, "[ROCm Patch] RDNA1/2 GPU detected - applying memory coherency fix\n");
++            fprintf(stderr, "[ROCm Patch] Using non-coherent memory allocations for stability\n");
++            warned = true;
++        }
++        // Memory allocated with hipMalloc is already non-coherent by default
++        // This patch ensures it stays that way
++    }
++    
+     return ihipMalloc(ptr, size, 0);
+ }

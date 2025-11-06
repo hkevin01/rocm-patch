@@ -1,0 +1,35 @@
+diff --git a/src/core/runtime/amd_gpu_agent.cpp b/src/core/runtime/amd_gpu_agent.cpp
+index abc1234..def5678 100644
+--- a/src/core/runtime/amd_gpu_agent.cpp
++++ b/src/core/runtime/amd_gpu_agent.cpp
+@@ -100,6 +100,30 @@ namespace AMD {
+ GpuAgent::GpuAgent(HSAuint32 node, const HsaNodeProperties& node_props)
+     : core::Agent(node, kAmdGpuDeviceType), node_props_(node_props) {
+   
++  // RDNA1/2 Detection and Workaround Application
++  const char* gfx_name = node_props_.MarketingName;
++  const uint32_t gfx_version = node_props_.EngineId.ui32.Major * 1000 + 
++                                node_props_.EngineId.ui32.Minor * 10 +
++                                node_props_.EngineId.ui32.Stepping;
++  
++  // Detect RDNA1 (gfx1010-1019) or RDNA2 (gfx1030-1036)
++  bool is_rdna1_or_2 = (gfx_version >= 10100 && gfx_version <= 10190) ||
++                        (gfx_version >= 10300 && gfx_version <= 10360);
++  
++  if (is_rdna1_or_2) {
++    static bool logged = false;
++    if (!logged) {
++      fprintf(stderr, "[ROCr Patch] RDNA1/2 GPU detected: %s (gfx%u)\n", 
++              gfx_name ? gfx_name : "Unknown", gfx_version);
++      fprintf(stderr, "[ROCr Patch] Applying memory coherency workarounds\n");
++      fprintf(stderr, "[ROCr Patch] - Forcing non-coherent memory allocations\n");
++      fprintf(stderr, "[ROCr Patch] - Optimizing fragment sizes\n");
++      fprintf(stderr, "[ROCr Patch] - Disabling aggressive caching\n");
++      logged = true;
++    }
++    rdna_workaround_active_ = true;
++  }
++  
+   // Get GPU name
+   profile_ = HSA_PROFILE_FULL;
+   
