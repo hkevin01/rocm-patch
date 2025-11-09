@@ -1,7 +1,21 @@
 # ROCm Patch Repository - Application Description
 
+## ⚠️ CRITICAL PROJECT REQUIREMENT ⚠️
+
+**PRIMARY GOAL: FIX GPU TO WORK WITH PYTORCH - NOT CPU FALLBACK**
+
+This project's purpose is to make the AMD RX 5600 XT (RDNA1/gfx1010) GPU work with PyTorch for actual GPU training.
+
+**NEVER suggest CPU training as a solution.** The user explicitly rejected CPU fallback multiple times.
+
+The goal is **GPU acceleration working natively**, not workarounds that avoid the GPU.
+
+---
+
 ## Overview
 A comprehensive patch collection and deployment system for AMD ROCm (Radeon Open Compute) platform issues. This repository addresses common problems, bugs, and compatibility issues found in ROCm installations across various GPU architectures and Linux distributions.
+
+**Current Focus**: Fixing RDNA1 (gfx1010) GPU compatibility with PyTorch/ROCm to enable actual GPU training, not CPU fallback.
 
 ## Core Features
 

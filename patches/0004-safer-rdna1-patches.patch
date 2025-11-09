@@ -1,0 +1,16 @@
+# Safer RDNA1 Patches - Fix Issues
+
+## Issues Found:
+1. CoarseGrain flag was being overwritten by AllocatePCIeRW check
+2. static_cast without type safety (owner() might not be GpuAgent)
+3. Need to check agent device type before casting
+
+## Solutions:
+1. Move RDNA1 check AFTER the AllocatePCIeRW line
+2. Add device type check before casting
+3. Add safety guards
+
+## Changes needed:
+- Move allocation patch to line 220 (after AllocatePCIeRW)
+- Add device_type() check in GetAccessInfo
+- Add null pointer checks

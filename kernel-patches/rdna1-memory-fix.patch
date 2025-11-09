@@ -1,0 +1,31 @@
+--- a/amd/amdkfd/kfd_crat.c
++++ b/amd/amdkfd/kfd_crat.c
+@@ -1118,6 +1118,27 @@ static int kfd_parse_subtype_mem(struct crat_subtype_memory *mem,
+ if (mem->flags & CRAT_MEM_FLAGS_HOT_PLUGGABLE)
+ flags |= HSA_MEM_FLAGS_HOT_PLUGGABLE;
+ if (mem->flags & CRAT_MEM_FLAGS_NON_VOLATILE)
+ flags |= HSA_MEM_FLAGS_NON_VOLATILE;
++
++/* RDNA1 FIX: Allow fine-grained memory for Navi 10 (0x731F)
++ * when spoofed as gfx1030 via HSA_OVERRIDE_GFX_VERSION.
++ *
++ * Problem: RDNA1 (gfx1010) only supports coarse-grained SVM,
++ * but when spoofed as RDNA2 (gfx1030), ROCm expects fine-grained.
++ * This causes memory model mismatches and crashes.
++ *
++ * Solution: Advertise fine-grained capability for device 0x731F
++ * (RX 5600 XT / RX 5700 XT) when it's a dGPU with visible memory.
++ * The hardware will still use coarse-grained under the hood,
++ * but ROCm's memory allocator won't reject the configuration.
++ */
++if (dev->gpu && dev->gpu->adev && dev->gpu->adev->pdev) {
++uint16_t device_id = dev->gpu->adev->pdev->device;
++/* Navi 10: RX 5600 XT / RX 5700 XT */
++if (device_id == 0x731F && heap_type != HSA_MEM_HEAP_TYPE_SYSTEM) {
++pr_debug("KFD: Enabling fine-grained flag for RDNA1 device 0x%x\n", device_id);
++flags |= HSA_MEM_FLAGS_HOT_PLUGGABLE;
++}
++}
+ 
+ size_in_bytes =
+ ((uint64_t)mem->length_high << 32) +

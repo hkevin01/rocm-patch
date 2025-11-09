@@ -1,0 +1,46 @@
+From: Kevin <hkevin01@github.com>
+Date: Fri, 8 Nov 2025 00:00:01 +0000
+Subject: [PATCH 2/3] Implement IsTrueRDNA1() method
+
+Implement the IsTrueRDNA1() method to detect RDNA1 GPUs by checking
+the actual hardware device ID from KFD. This covers:
+- RX 5600 XT / RX 5700 XT: 0x731F
+- RX 5500 XT: 0x7340, 0x7341
+- Other RDNA1 devices: 0x7310-0x7360 range
+
+---
+ src/core/runtime/amd_gpu_agent.cpp | 19 +++++++++++++++++++
+ 1 file changed, 19 insertions(+)
+
+diff --git a/src/core/runtime/amd_gpu_agent.cpp b/src/core/runtime/amd_gpu_agent.cpp
+index 2345678..bcdefgh 100644
+--- a/src/core/runtime/amd_gpu_agent.cpp
++++ b/src/core/runtime/amd_gpu_agent.cpp
+@@ -2800,6 +2800,25 @@ hsa_status_t GpuAgent::EnableDmaBuf(IpcMemHandle& ipc_mem_handle) {
+   return HSA_STATUS_SUCCESS;
+ }
+ 
++// RDNA1 FIX: Detect true RDNA1 hardware by device ID
++bool GpuAgent::IsTrueRDNA1() const {
++  // Get the actual hardware device ID (not affected by HSA_OVERRIDE_GFX_VERSION)
++  uint32_t device_id = properties_.DeviceId;
++  
++  // RDNA1 device IDs (Navi 10, Navi 12, Navi 14)
++  // RX 5700 XT, RX 5600 XT: 0x731F
++  // RX 5500 XT: 0x7340, 0x7341, 0x7347
++  // Other RDNA1: 0x7310-0x736F range
++  
++  if (device_id == 0x731F || device_id == 0x7340 || 
++      device_id == 0x7341 || device_id == 0x7347) {
++    return true;
++  }
++  
++  // Catch other RDNA1 variants in range
++  return (device_id >= 0x7310 && device_id <= 0x736F);
++}
++
+ }  // namespace amd
+ }  // namespace rocr
+ 
+-- 
+2.43.0

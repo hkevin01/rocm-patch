@@ -1,0 +1,28 @@
+From: Kevin <hkevin01@github.com>
+Date: Fri, 8 Nov 2025 00:00:00 +0000
+Subject: [PATCH 1/3] Add RDNA1 hardware detection method
+
+Add IsTrueRDNA1() method to GpuAgent to detect actual RDNA1 hardware
+(gfx1010) even when HSA_OVERRIDE_GFX_VERSION is set to spoof gfx1030.
+This uses the real hardware DeviceId from KFD properties.
+
+---
+ src/core/inc/amd_gpu_agent.h | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/src/core/inc/amd_gpu_agent.h b/src/core/inc/amd_gpu_agent.h
+index 1234567..abcdefg 100644
+--- a/src/core/inc/amd_gpu_agent.h
++++ b/src/core/inc/amd_gpu_agent.h
+@@ -416,6 +416,9 @@ class GpuAgent : public core::Agent,
+             properties_.EngineId.ui32.uCode > 999);
+   }
+ 
++  // RDNA1 FIX: Detect true RDNA1 hardware (gfx1010) by device ID
++  bool IsTrueRDNA1() const;
++
+   // Helpers
+   __forceinline bool is_kv_device() const { return profile_ == HSA_PROFILE_FULL; }
+ 
+-- 
+2.43.0

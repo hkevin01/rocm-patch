@@ -1,0 +1,91 @@
+From: Kevin <hkevin01@github.com>
+Date: Fri, 8 Nov 2025 00:00:02 +0000
+Subject: [PATCH 3/3] Force coarse-grained memory for RDNA1 hardware
+
+Fix memory aperture violations and Conv2d hangs when RDNA1 GPUs (gfx1010)
+are spoofed as RDNA2 (gfx1030) using HSA_OVERRIDE_GFX_VERSION.
+
+RDNA1 does not support fine-grained shared virtual memory (SVM), but
+RDNA2 does. When gfx1010 is spoofed as gfx1030, the runtime incorrectly
+attempts to use fine-grained memory, causing:
+- Memory aperture violations
+- Kernel compilation hangs (especially in Conv2d)
+- HIP memory allocation failures
+
+This patch:
+1. Forces coarse-grained memory allocation for true RDNA1 hardware
+2. Allows memory pool access for RDNA1 even on PCIe links
+3. Adds debug logging when RDNA1 workarounds are applied
+
+Fixes: ROCm/ROCm#2527
+
+---
+ src/core/runtime/amd_memory_region.cpp | 47 +++++++++++++++++++++++++++
+ 1 file changed, 47 insertions(+)
+
+diff --git a/src/core/runtime/amd_memory_region.cpp b/src/core/runtime/amd_memory_region.cpp
+index 3456789..cdefghi 100644
+--- a/src/core/runtime/amd_memory_region.cpp
++++ b/src/core/runtime/amd_memory_region.cpp
+@@ -196,6 +196,28 @@ hsa_status_t MemoryRegion::AllocateImpl(size_t& size, AllocateFlags alloc_flags
+   size = AlignUp(size, kPageSize_);
+ 
+   HsaMemFlags kmt_alloc_flags(mem_flag_);
++  
++  // RDNA1 FIX: Force coarse-grained memory for true RDNA1 hardware
++  // RDNA1 (gfx1010) does not support fine-grained SVM, but RDNA2 (gfx1030) does.
++  // When HSA_OVERRIDE_GFX_VERSION=10.3.0 is used to spoof gfx1010 as gfx1030,
++  // the runtime incorrectly attempts fine-grained allocations, causing:
++  // - Memory aperture violations
++  // - Conv2d kernel compilation hangs
++  // - HIP allocation failures
++  //
++  // Solution: Detect true hardware via device ID and force coarse-grained mode.
++  const AMD::GpuAgent* gpu_owner = dynamic_cast<const AMD::GpuAgent*>(owner());
++  if (gpu_owner && gpu_owner->IsTrueRDNA1()) {
++    // Force coarse-grained memory for all allocations
++    kmt_alloc_flags.ui32.CoarseGrain = 1;
++    kmt_alloc_flags.ui32.ExtendedCoherent = 0;
++    
++    static bool warned = false;
++    if (!warned) {
++      fprintf(stderr, "[ROCr RDNA1 Fix] Forcing coarse-grained memory for gfx1010 hardware\n");
++      warned = true;
++    }
++  }
++  
+   kmt_alloc_flags.ui32.ExecuteAccess =
+       (alloc_flags & AllocateExecutable ? 1 : 0);
+   kmt_alloc_flags.ui32.AQLQueueMemory =
+@@ -526,6 +548,31 @@ hsa_amd_memory_pool_access_t MemoryRegion::GetAccessInfo(
+     if (fine_grain() == false) {
+       return HSA_AMD_MEMORY_POOL_ACCESS_DISALLOWED_BY_DEFAULT;
+     }
++    
++    // RDNA1 FIX: Allow coarse-grained access for true RDNA1 hardware
++    // When gfx1010 is spoofed as gfx1030, the memory region may be marked as
++    // fine-grained (following gfx1030 behavior), but the requesting GPU is
++    // actually RDNA1 and only supports coarse-grained access.
++    //
++    // The code above returns DISALLOWED_BY_DEFAULT for coarse-grained (correct),
++    // but then falls through to return NEVER_ALLOWED for fine-grained on PCIe
++    // (incorrect for RDNA1).
++    //
++    // Solution: Check if the requesting agent is true RDNA1, and if so,
++    // return DISALLOWED_BY_DEFAULT instead of NEVER_ALLOWED.
++    const AMD::GpuAgent* requesting_gpu = dynamic_cast<const AMD::GpuAgent*>(&agent);
++    if (requesting_gpu && requesting_gpu->IsTrueRDNA1()) {
++      static bool warned = false;
++      if (!warned) {
++        fprintf(stderr, "[ROCr RDNA1 Fix] Allowing coarse-grained memory access for gfx1010 hardware\n");
++        warned = true;
++      }
++      // Allow the allocation to proceed with coarse-grained memory
++      // This matches what RDNA1 hardware actually supports
++      return HSA_AMD_MEMORY_POOL_ACCESS_DISALLOWED_BY_DEFAULT;
++    }
+ 
+     // Return disallowed by default if memory is fine
+     // grained and requesting device is connected via xGMI link
+-- 
+2.43.0
