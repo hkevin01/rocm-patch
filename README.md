@@ -5,6 +5,7 @@
 - [Project Purpose](#-project-purpose)
 - [Problem Statement](#-problem-statement)
 - [Solution Overview](#-solution-overview)
+  - [Advanced MIOpen Bypass](#-advanced-miopen-bypass-for-production)
 - [Technology Stack Explained](#-technology-stack-explained)
 - [Architecture & Flow](#-architecture--flow)
 - [Installation Guide](#-installation-guide)
@@ -52,7 +53,7 @@ This project provides a **complete, tested solution** for PyTorch Conv2d operati
 PyTorch Conv2d operations **hang indefinitely** (no crash, no error, just freeze) on AMD Radeon RX 5600 XT when:
 
 - ❌ Input tensor dimensions exceed **42×42 pixels**
-- ❌ Using default MIOpen convolution algorithms  
+- ❌ Using default MIOpen convolution algorithms
 - ❌ Version mismatches between PyTorch and ROCm exist
 - ❌ Using newer ROCm versions (5.7+, 6.x) with RDNA1
 
@@ -90,13 +91,13 @@ flowchart TD
         S4["NumPy 1.x<br/><small>Binary compatibility</small>"]
         S5["MIOPEN_DEBUG_CONV_IMPLICIT_GEMM=1<br/><small>Algorithm selection</small>"]
     end
-    
+
     S1 --> S2
     S2 --> S3
     S3 --> S4
     S4 --> S5
     S5 --> Result["✅ All Conv2d sizes work<br/>32×32 through 224×224"]
-    
+
     style Solution fill:#1a1a1a,stroke:#7cb342,stroke-width:3px,color:#fff
     style S1 fill:#2d5a3d,stroke:#7cb342,color:#fff
     style S2 fill:#2d5a3d,stroke:#7cb342,color:#fff
@@ -116,13 +117,46 @@ flowchart TD
 | **NumPy** | <2.0 (1.26.4) | PyTorch 1.13.1 binary ABI requirement |
 | **Environment** | `MIOPEN_DEBUG_CONV_IMPLICIT_GEMM=1` | Forces stable convolution algorithm |
 
+### 🚀 Advanced MIOpen Bypass (For Production)
+
+For complex models (YOLOv8, ResNet, etc.) or projects that need more control than environment variables, we provide an **Advanced MIOpen Bypass** system with intelligent fallback strategies:
+
+```python
+# Quick integration - one line before model import
+import sys
+sys.path.insert(0, '/path/to/rocm-patch/src/patches/miopen_bypass')
+from conv2d_fallback import enable_miopen_bypass
+enable_miopen_bypass()  # Auto strategy with IMPLICIT_GEMM + CPU fallback
+
+# Now use your models normally
+from ultralytics import YOLO
+model = YOLO('yolov8n.pt').cuda()
+```
+
+**Features:**
+- ✅ **5 Strategies**: AUTO (recommended), IMPLICIT_GEMM, CPU_FALLBACK, SELECTIVE, PURE_PYTORCH
+- ✅ **Intelligent Caching**: Decisions cached for performance
+- ✅ **Production Tested**: YOLOv8 training (98% GPU util, 4.7 it/s, ~10 days stable)
+- ✅ **Drop-in Replacement**: No model code changes
+- ✅ **Statistics Tracking**: Monitor bypass behavior per layer
+
+**When to Use:**
+- Complex models (YOLO, Detectron2, Mask R-CNN)
+- Can't modify environment variables globally
+- Need CPU fallback safety net for edge cases
+- Want performance monitoring/statistics
+
+**Documentation:**
+- **[Complete Guide](src/patches/miopen_bypass/README.md)** - Usage, strategies, examples
+- **[Technical Deep Dive](docs/MIOPEN_BYPASS_SOLUTION.md)** - Implementation details, benchmarks
+
 ---
 
 ## 🔧 Technology Stack Explained
 
 ### 1. ROCm (Radeon Open Compute)
 
-**What it is:**  
+**What it is:**
 AMD's open-source software platform for GPU computing, analogous to NVIDIA's CUDA.
 
 **Components:**
@@ -146,7 +180,7 @@ RDNA1: 64 threads/wave × 36 CUs = 2,304 concurrent threads
 
 ### 2. PyTorch
 
-**What it is:**  
+**What it is:**
 Deep learning framework with dynamic computation graphs, tensor operations, and autograd.
 
 **Why PyTorch 1.13.1+rocm5.2:**
@@ -166,7 +200,7 @@ torch.nn.Conv2d(...)  # Python API
 
 ### 3. Python 3.10 Virtual Environment
 
-**What it is:**  
+**What it is:**
 Isolated Python environment with specific package versions.
 
 **Why Python 3.10:**
@@ -184,7 +218,7 @@ pip install torch==1.13.1+rocm5.2      # Install exact version
 
 ### 4. NumPy Version Control
 
-**What it is:**  
+**What it is:**
 Fundamental package for numerical arrays in Python.
 
 **Why NumPy <2.0:**
@@ -201,7 +235,7 @@ Fundamental package for numerical arrays in Python.
 
 ### 5. MIOpen IMPLICIT_GEMM Algorithm
 
-**What it is:**  
+**What it is:**
 Convolution algorithm that transforms convolution into matrix multiplication.
 
 **Mathematical Formulation:**
@@ -234,7 +268,7 @@ Time: O(KRS×HW + C×KRS×HW) ← dominated by GEMM
 
 ### 6. HSA_OVERRIDE_GFX_VERSION
 
-**What it is:**  
+**What it is:**
 Environment variable that tells ROCm runtime which GPU architecture to target.
 
 **Why 10.3.0:**
@@ -261,28 +295,28 @@ graph TB
     subgraph UserSpace["👤 User Space"]
         APP["PyTorch Application<br/><small>import torch<br/>nn.Conv2d(...)</small>"]
     end
-    
+
     subgraph Python["🐍 Python Layer - 3.10 venv"]
         TORCH["PyTorch 1.13.1+rocm5.2<br/><small>torch.cuda API</small>"]
         NUMPY["NumPy 1.26.4<br/><small>Array backend</small>"]
     end
-    
+
     subgraph ROCmStack["�� ROCm 5.2.0 Stack"]
         HIP["HIP Runtime<br/><small>CUDA compatibility</small>"]
         MIOPEN["MIOpen 2.16.0<br/><small>Conv algorithms</small>"]
         ROCBLAS["rocBLAS<br/><small>Matrix ops</small>"]
         HSA["HSA Runtime<br/><small>Device mgmt</small>"]
     end
-    
+
     subgraph Config["⚙️ Configuration"]
         ENV1["MIOPEN_DEBUG_CONV_IMPLICIT_GEMM=1"]
         ENV2["HSA_OVERRIDE_GFX_VERSION=10.3.0"]
     end
-    
+
     subgraph Hardware["💻 Hardware"]
         GPU["AMD Radeon RX 5600 XT<br/><small>gfx1010 (RDNA1)<br/>36 CUs, 1615 MHz<br/>6GB GDDR6</small>"]
     end
-    
+
     APP --> TORCH
     TORCH --> NUMPY
     TORCH --> HIP
@@ -294,7 +328,7 @@ graph TB
     MIOPEN --> GPU
     ROCBLAS --> GPU
     HSA --> GPU
-    
+
     style UserSpace fill:#1a1a1a,stroke:#58a6ff,color:#fff
     style Python fill:#1a1a1a,stroke:#58a6ff,color:#fff
     style ROCmStack fill:#1a1a1a,stroke:#58a6ff,color:#fff
@@ -323,14 +357,14 @@ sequenceDiagram
     participant MIO as MIOpen
     participant ROC as rocBLAS
     participant GPU as GPU (RDNA1)
-    
+
     User->>PT: conv(x) call
     PT->>PT: Check tensor on GPU
     PT->>HIP: hipMalloc for output
     HIP->>GPU: Allocate VRAM
-    
+
     PT->>MIO: miopenConvolutionForward()
-    
+
     alt IMPLICIT_GEMM Enabled
         MIO->>MIO: Check env: MIOPEN_DEBUG_CONV_IMPLICIT_GEMM=1
         MIO->>MIO: Select GEMM algorithm
@@ -344,17 +378,10 @@ sequenceDiagram
         MIO->>GPU: Launch direct conv kernel
         Note over GPU: ⚠️ May hang on RDNA1<br/>for sizes >42×42
     end
-    
+
     GPU-->>MIO: Convolution result
     MIO-->>PT: miopenStatus_t success
     PT->>User: Return output tensor
-    
-    style User fill:#1e3a5f,stroke:#58a6ff,color:#fff
-    style PT fill:#2d5a3d,stroke:#7cb342,color:#fff
-    style HIP fill:#5a2d2d,stroke:#f85149,color:#fff
-    style MIO fill:#5a2d2d,stroke:#f85149,color:#fff
-    style ROC fill:#3d3d3d,stroke:#58a6ff,color:#fff
-    style GPU fill:#1e1e3d,stroke:#f85149,color:#fff
 ```
 
 ### Decision Flow for Algorithm Selection
@@ -363,26 +390,26 @@ sequenceDiagram
 %%{init: {'theme':'base', 'themeVariables': { 'primaryColor':'#1e3a5f','primaryTextColor':'#fff','primaryBorderColor':'#58a6ff','lineColor':'#58a6ff','background':'#0d1117','mainBkg':'#161b22','textColor':'#e6edf3','fontSize':'14px'}}}%%
 flowchart TD
     Start["Conv2d Forward Pass"] --> CheckEnv{"MIOPEN_DEBUG_CONV_<br/>IMPLICIT_GEMM=1?"}
-    
+
     CheckEnv -->|Yes| ImplicitGEMM["✅ Use IMPLICIT_GEMM<br/><small>Transform to matrix multiply</small>"]
     CheckEnv -->|No| FindDB{"Find precompiled<br/>kernel in DB?"}
-    
+
     FindDB -->|Found| UseDB["Use cached kernel"]
     FindDB -->|Not Found| AutoTune["MIOpen Find()<br/><small>Search best algorithm</small>"]
-    
+
     AutoTune --> TestDirect["Test Direct Conv"]
     TestDirect --> CheckSize{"Input size<br/>>42×42?"}
-    
+
     CheckSize -->|Yes| Hang["❌ HANGS FOREVER<br/><small>RDNA1 kernel bug</small>"]
     CheckSize -->|No| Works1["✅ Works"]
-    
+
     ImplicitGEMM --> Im2Col["1. im2col transform"]
     Im2Col --> GEMM["2. rocBLAS GEMM"]
     GEMM --> Reshape["3. Reshape output"]
     Reshape --> Works2["✅ Always Works<br/><small>All sizes stable</small>"]
-    
+
     UseDB --> Works3["✅ May Work<br/><small>Depends on cached algo</small>"]
-    
+
     style Start fill:#1e3a5f,stroke:#58a6ff,color:#fff
     style CheckEnv fill:#3d3d1e,stroke:#7cb342,color:#fff
     style ImplicitGEMM fill:#2d5a3d,stroke:#7cb342,color:#fff
@@ -572,12 +599,12 @@ for i, (size, in_ch, out_ch, kernel, batch) in enumerate(test_configs, 1):
     try:
         conv = torch.nn.Conv2d(in_ch, out_ch, kernel_size=kernel, padding=kernel//2).cuda()
         x = torch.randn(batch, in_ch, size, size).cuda()
-        
+
         start = time.time()
         y = conv(x)
         torch.cuda.synchronize()
         elapsed = time.time() - start
-        
+
         print(f" {i:2d}  | {size:3d}×{size:<3d} | {in_ch:2d}→{out_ch:<3d}  | {kernel}×{kernel}    | {batch:2d}    | {elapsed:6.3f}s | ✅ PASS")
     except Exception as e:
         print(f" {i:2d}  | {size:3d}×{size:<3d} | {in_ch:2d}→{out_ch:<3d}  | {kernel}×{kernel}    | {batch:2d}    |    N/A  | ❌ FAIL")
@@ -635,20 +662,20 @@ graph LR
     subgraph PT1["PyTorch 1.13.1+rocm5.2"]
         PTBin1["Compiled with:<br/>ROCm 5.2 headers<br/>MIOpen 2.16.0<br/>HIP 5.2.x"]
     end
-    
+
     subgraph ROCm1["ROCm 5.2.0 Runtime"]
         Runtime1["Provides:<br/>libMIOpen.so.2<br/>libamdhip64.so.5<br/>libhsa-runtime64.so"]
     end
-    
+
     subgraph PT2["PyTorch 2.2.2+rocm5.7"]
         PTBin2["Compiled with:<br/>ROCm 5.7 headers<br/>MIOpen 2.20.0<br/>HIP 5.7.x"]
     end
-    
+
     PTBin1 -->|✅ ABI Match| Runtime1
     PTBin2 -->|❌ ABI Mismatch| Runtime1
-    
+
     Runtime1 -.->|"HSA_STATUS_ERROR_<br/>MEMORY_APERTURE_<br/>VIOLATION"| PTBin2
-    
+
     style PT1 fill:#2d5a3d,stroke:#7cb342,color:#fff
     style ROCm1 fill:#1e3a5f,stroke:#58a6ff,color:#fff
     style PT2 fill:#5a2d2d,stroke:#f85149,color:#fff
@@ -793,9 +820,9 @@ AMD Radeon RX 5600 XT (gfx1010)
 4. ✅ **ROCm 5.2 best for RDNA1** - newer versions drop support
 5. ✅ **Virtual environment essential** - isolate exact versions
 
-**Total Investigation Time**: ~8 days  
-**Files Created During Investigation**: 44+ (archived)  
-**Test Scripts Written**: 15+  
+**Total Investigation Time**: ~8 days
+**Files Created During Investigation**: 44+ (archived)
+**Test Scripts Written**: 15+
 **Final Solution**: Simple but requires exact configuration
 
 ---
@@ -901,6 +928,52 @@ ls /opt/rocm-5.2.0
 export ROCM_PATH=/opt/rocm-5.2.0
 ```
 
+#### Issue 6: Need Python-Level Fallback (YOLOv8, Complex Models)
+
+**Symptom:**
+```
+MIOpen(HIP): Warning [SQLiteBase] Missing system database file: gfx1030_40.kdb
+# Or your project doesn't allow environment variable changes
+```
+
+**Cause**: Environment variable solution not sufficient for some projects, or need more control over fallback behavior
+
+**Solution**: Use the **Advanced MIOpen Bypass** module
+
+```python
+# Quick start - enable before importing your model
+import sys
+sys.path.insert(0, '/home/kevin/Projects/rocm-patch/src/patches/miopen_bypass')
+
+from conv2d_fallback import enable_miopen_bypass
+
+# Enable with auto strategy (recommended)
+enable_miopen_bypass()
+
+# Now import and use your models (YOLOv8, ResNet, etc.)
+from ultralytics import YOLO
+model = YOLO('yolov8n.pt')
+results = model.train(data='dataset.yaml', epochs=50)
+```
+
+**Features:**
+- ✅ **5 Fallback Strategies**: AUTO, IMPLICIT_GEMM, CPU_FALLBACK, SELECTIVE, PURE_PYTORCH
+- ✅ **Intelligent Caching**: Avoids repeated bypass decisions
+- ✅ **Performance Monitoring**: Track bypass statistics per layer
+- ✅ **Tested with YOLOv8**: 98% GPU utilization, 4.7 it/s, stable training
+- ✅ **Drop-in Replacement**: No model code changes required
+
+**Documentation:**
+- [MIOpen Bypass README](src/patches/miopen_bypass/README.md) - Complete usage guide
+- [Solution Summary](docs/MIOPEN_BYPASS_SOLUTION.md) - Technical details and real-world results
+
+**Real-World Validation:**
+Successfully used for YOLOv8 training on LTDV2 dataset:
+- Duration: ~10 days, 50 epochs
+- GPU Utilization: 98%
+- Speed: 4.7 iterations/second
+- Status: ✅ Training completes without errors or hangs
+
 ---
 
 ## 📈 Performance Metrics
@@ -985,7 +1058,7 @@ If this solution works for you, please consider:
 
 ---
 
-**Last Updated**: November 9, 2025  
-**Tested Configuration**: ROCm 5.2.0 + PyTorch 1.13.1+rocm5.2 + Python 3.10  
-**GPU**: AMD Radeon RX 5600 XT (gfx1010)  
+**Last Updated**: November 9, 2025
+**Tested Configuration**: ROCm 5.2.0 + PyTorch 1.13.1+rocm5.2 + Python 3.10
+**GPU**: AMD Radeon RX 5600 XT (gfx1010)
 **Status**: ✅ Production Ready
