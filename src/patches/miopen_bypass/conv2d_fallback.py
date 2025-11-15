@@ -499,17 +499,25 @@ def print_bypass_report(model: nn.Module):
 
 # Convenience function for quick setup
 def enable_miopen_bypass(
-    strategy: FallbackStrategy = FallbackStrategy.AUTO,
+    strategy: Optional[FallbackStrategy] = None,
     verbose: bool = True
 ) -> Conv2dBypassConfig:
     """
     Quick setup for MIOpen bypass.
+
+    Args:
+        strategy: FallbackStrategy to use (default: AUTO)
+        verbose: Print configuration info
 
     Example:
         >>> from conv2d_fallback import enable_miopen_bypass
         >>> enable_miopen_bypass(strategy=FallbackStrategy.SELECTIVE)
         >>> # Now create and train your model
     """
+    # Default to AUTO if not specified
+    if strategy is None:
+        strategy = FallbackStrategy.AUTO
+
     config = Conv2dBypassConfig(
         strategy=strategy,
         verbose=verbose
