@@ -138,13 +138,13 @@ Both projects identified the same root cause:
 
 ## 📊 Solution Effectiveness Comparison
 
-| Approach | Crash Rate | GPU Speedup | Complexity | Root Required |
+| <sub>Approach</sub> | <sub>Crash Rate</sub> | <sub>GPU Speedup</sub> | <sub>Complexity</sub> | <sub>Root Required</sub> |
 |----------|------------|-------------|------------|---------------|
-| **No Fix** | 100% | N/A | - | No |
-| **EEG2025 Detection** | 0% | 0x (CPU only) | Low | No |
-| **Thermal Layer 1** | 70% | ~3x | Low | Yes |
-| **Thermal Layer 1+2** | 5% | ~10x | Medium | Yes |
-| **Thermal Layer 1+2+3** | <1% | ~8x | High | Yes |
+| <sub>**No Fix**</sub> | <sub>100%</sub> | <sub>N/A</sub> | <sub>-</sub> | <sub>No</sub> |
+| <sub>**EEG2025 Detection**</sub> | <sub>0%</sub> | <sub>0x (CPU only)</sub> | <sub>Low</sub> | <sub>No</sub> |
+| <sub>**Thermal Layer 1**</sub> | <sub>70%</sub> | <sub>~3x</sub> | <sub>Low</sub> | <sub>Yes</sub> |
+| <sub>**Thermal Layer 1+2**</sub> | <sub>5%</sub> | <sub>~10x</sub> | <sub>Medium</sub> | <sub>Yes</sub> |
+| <sub>**Thermal Layer 1+2+3**</sub> | <sub><1%</sub> | <sub>~8x</sub> | <sub>High</sub> | <sub>Yes</sub> |
 
 ---
 
