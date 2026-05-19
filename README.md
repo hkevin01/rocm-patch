@@ -69,12 +69,12 @@ y = conv(x)  # ⏸️ HANGS FOREVER - no error, no timeout
 
 ### Failed Configurations Tested
 
-| Configuration | Result | Issue |
+| <sub>Configuration</sub> | <sub>Result</sub> | <sub>Issue</sub> |
 |---------------|--------|-------|
-| ROCm 5.7 + PyTorch 2.2.2+rocm5.7 | ❌ Hangs | Poor RDNA1 support in ROCm 5.7 |
-| ROCm 6.2.4 + PyTorch 2.x | ❌ Hangs | RDNA1 deprecated in ROCm 6+ |
-| ROCm 5.2 + PyTorch 2.2.2+rocm5.7 | ❌ Memory errors | Version mismatch causes HSA violations |
-| ROCm 5.2 + PyTorch 1.13.1+rocm5.2 (Python 3.12) | ❌ Install fails | PyTorch 1.13.1 doesn't support Python 3.12 |
+| <sub>ROCm 5.7 + PyTorch 2.2.2+rocm5.7</sub> | <sub>❌ Hangs</sub> | <sub>Poor RDNA1 support in ROCm 5.7</sub> |
+| <sub>ROCm 6.2.4 + PyTorch 2.x</sub> | <sub>❌ Hangs</sub> | <sub>RDNA1 deprecated in ROCm 6+</sub> |
+| <sub>ROCm 5.2 + PyTorch 2.2.2+rocm5.7</sub> | <sub>❌ Memory errors</sub> | <sub>Version mismatch causes HSA violations</sub> |
+| <sub>ROCm 5.2 + PyTorch 1.13.1+rocm5.2 (Python 3.12)</sub> | <sub>❌ Install fails</sub> | <sub>PyTorch 1.13.1 doesn't support Python 3.12</sub> |
 
 ---
 
@@ -110,13 +110,13 @@ flowchart TD
 
 ### Requirements Summary
 
-| Component | Required Version | Why Critical |
+| <sub>Component</sub> | <sub>Required Version</sub> | <sub>Why Critical</sub> |
 |-----------|------------------|--------------|
-| **ROCm** | 5.2.0 | Last version with full RDNA1 optimization; 5.7+ drops support |
-| **PyTorch** | 1.13.1+rocm5.2 | Compiled against ROCm 5.2 libraries; no cross-version compatibility |
-| **Python** | 3.10.x | PyTorch 1.13.1 max support; 3.11+ not compatible |
-| **NumPy** | <2.0 (1.26.4) | PyTorch 1.13.1 binary ABI requirement |
-| **Environment** | `MIOPEN_DEBUG_CONV_IMPLICIT_GEMM=1` | Forces stable convolution algorithm |
+| <sub>**ROCm**</sub> | <sub>5.2.0</sub> | <sub>Last version with full RDNA1 optimization; 5.7+ drops support</sub> |
+| <sub>**PyTorch**</sub> | <sub>1.13.1+rocm5.2</sub> | <sub>Compiled against ROCm 5.2 libraries; no cross-version compatibility</sub> |
+| <sub>**Python**</sub> | <sub>3.10.x</sub> | <sub>PyTorch 1.13.1 max support; 3.11+ not compatible</sub> |
+| <sub>**NumPy**</sub> | <sub><2.0 (1.26.4)</sub> | <sub>PyTorch 1.13.1 binary ABI requirement</sub> |
+| <sub>**Environment**</sub> | <sub>`MIOPEN_DEBUG_CONV_IMPLICIT_GEMM=1`</sub> | <sub>Forces stable convolution algorithm</sub> |
 
 ### 🚀 Advanced MIOpen Bypass (For Production)
 
@@ -901,12 +901,12 @@ Time: O(N × C_out × H × W)  ← Negligible
 
 **Performance Comparison:**
 
-| Metric | Direct Conv | IMPLICIT_GEMM | Difference |
+| <sub>Metric</sub> | <sub>Direct Conv</sub> | <sub>IMPLICIT_GEMM</sub> | <sub>Difference</sub> |
 |--------|-------------|---------------|------------|
-| First Run | 0.5s (cached) | 2.0s (compile) | +300% |
-| Subsequent | Hangs ❌ | 0.3s ✅ | N/A |
-| Memory | 100% | 125% | +25% |
-| Stability | Fails >42×42 | Always works | ✅ |
+| <sub>First Run</sub> | <sub>0.5s (cached)</sub> | <sub>2.0s (compile)</sub> | <sub>+300%</sub> |
+| <sub>Subsequent</sub> | <sub>Hangs ❌</sub> | <sub>0.3s ✅</sub> | <sub>N/A</sub> |
+| <sub>Memory</sub> | <sub>100%</sub> | <sub>125%</sub> | <sub>+25%</sub> |
+| <sub>Stability</sub> | <sub>Fails >42×42</sub> | <sub>Always works</sub> | <sub>✅</sub> |
 
 ### RDNA1 Architecture Specifics
 
@@ -945,14 +945,14 @@ AMD Radeon RX 5600 XT (gfx1010)
 
 ## 📊 Previous Attempts
 
-| Attempt # | Configuration | Python | PyTorch | ROCm | Algorithm | Result | Issue | Duration |
+| <sub>Attempt #</sub> | <sub>Configuration</sub> | <sub>Python</sub> | <sub>PyTorch</sub> | <sub>ROCm</sub> | <sub>Algorithm</sub> | <sub>Result</sub> | <sub>Issue</sub> | <sub>Duration</sub> |
 |-----------|--------------|---------|----------|------|-----------|--------|-------|----------|
-| 1 | Initial Setup | 3.12 | 2.2.2+rocm5.7 | 5.7.0 | Default | ❌ Hangs | Poor RDNA1 support in ROCm 5.7 | 3 days |
-| 2 | Upgrade ROCm | 3.12 | Latest | 6.2.4 | Default | ❌ Hangs | RDNA1 deprecated in ROCm 6.x | 1 day |
-| 3 | Downgrade ROCm | 3.12 | 2.2.2+rocm5.7 | 5.2.0 | Default | ❌ Memory errors | PyTorch/ROCm version mismatch | 2 days |
-| 4 | Try IMPLICIT_GEMM | 3.12 | 2.2.2+rocm5.7 | 5.2.0 | IMPLICIT_GEMM | ❌ Memory errors | Version mismatch persists | 1 day |
-| 5 | Match PyTorch | 3.12 | 1.13.1+rocm5.2 | 5.2.0 | IMPLICIT_GEMM | ❌ Install fails | Python 3.12 incompatible | 0.5 days |
-| **6** | **Python 3.10 venv** | **3.10** | **1.13.1+rocm5.2** | **5.2.0** | **IMPLICIT_GEMM** | **✅ Success** | **None - All sizes work** | **Setup** |
+| <sub>1</sub> | <sub>Initial Setup</sub> | <sub>3.12</sub> | <sub>2.2.2+rocm5.7</sub> | <sub>5.7.0</sub> | <sub>Default</sub> | <sub>❌ Hangs</sub> | <sub>Poor RDNA1 support in ROCm 5.7</sub> | <sub>3 days</sub> |
+| <sub>2</sub> | <sub>Upgrade ROCm</sub> | <sub>3.12</sub> | <sub>Latest</sub> | <sub>6.2.4</sub> | <sub>Default</sub> | <sub>❌ Hangs</sub> | <sub>RDNA1 deprecated in ROCm 6.x</sub> | <sub>1 day</sub> |
+| <sub>3</sub> | <sub>Downgrade ROCm</sub> | <sub>3.12</sub> | <sub>2.2.2+rocm5.7</sub> | <sub>5.2.0</sub> | <sub>Default</sub> | <sub>❌ Memory errors</sub> | <sub>PyTorch/ROCm version mismatch</sub> | <sub>2 days</sub> |
+| <sub>4</sub> | <sub>Try IMPLICIT_GEMM</sub> | <sub>3.12</sub> | <sub>2.2.2+rocm5.7</sub> | <sub>5.2.0</sub> | <sub>IMPLICIT_GEMM</sub> | <sub>❌ Memory errors</sub> | <sub>Version mismatch persists</sub> | <sub>1 day</sub> |
+| <sub>5</sub> | <sub>Match PyTorch</sub> | <sub>3.12</sub> | <sub>1.13.1+rocm5.2</sub> | <sub>5.2.0</sub> | <sub>IMPLICIT_GEMM</sub> | <sub>❌ Install fails</sub> | <sub>Python 3.12 incompatible</sub> | <sub>0.5 days</sub> |
+| <sub>**6**</sub> | <sub>**Python 3.10 venv**</sub> | <sub>**3.10**</sub> | <sub>**1.13.1+rocm5.2**</sub> | <sub>**5.2.0**</sub> | <sub>**IMPLICIT_GEMM**</sub> | <sub>**✅ Success**</sub> | <sub>**None - All sizes work**</sub> | <sub>**Setup**</sub> |
 
 **Lessons Learned:**
 
@@ -1131,14 +1131,14 @@ Successfully used for YOLOv8 training on LTDV2 dataset:
 
 **Conv2d Forward Pass Timing:**
 
-| Input Size | Channels (In→Out) | Kernel | First Run | Subsequent | Memory Used |
+| <sub>Input Size</sub> | <sub>Channels (In→Out)</sub> | <sub>Kernel</sub> | <sub>First Run</sub> | <sub>Subsequent</sub> | <sub>Memory Used</sub> |
 |------------|-------------------|--------|-----------|------------|-------------|
-| 32×32 | 3→64 | 3×3 | 2.083s | 0.028s | 1.2 MB |
-| 44×44 | 3→64 | 3×3 | 1.876s | 0.031s | 2.1 MB |
-| 64×64 | 3→64 | 3×3 | 1.892s | 0.035s | 4.2 MB |
-| 128×128 | 3→64 | 3×3 | 1.934s | 0.042s | 16.5 MB |
-| 224×224 | 3→64 | 3×3 | 1.967s | 0.068s | 50.2 MB |
-| 512×512 | 3→64 | 3×3 | 2.145s | 0.187s | 262 MB |
+| <sub>32×32</sub> | <sub>3→64</sub> | <sub>3×3</sub> | <sub>2.083s</sub> | <sub>0.028s</sub> | <sub>1.2 MB</sub> |
+| <sub>44×44</sub> | <sub>3→64</sub> | <sub>3×3</sub> | <sub>1.876s</sub> | <sub>0.031s</sub> | <sub>2.1 MB</sub> |
+| <sub>64×64</sub> | <sub>3→64</sub> | <sub>3×3</sub> | <sub>1.892s</sub> | <sub>0.035s</sub> | <sub>4.2 MB</sub> |
+| <sub>128×128</sub> | <sub>3→64</sub> | <sub>3×3</sub> | <sub>1.934s</sub> | <sub>0.042s</sub> | <sub>16.5 MB</sub> |
+| <sub>224×224</sub> | <sub>3→64</sub> | <sub>3×3</sub> | <sub>1.967s</sub> | <sub>0.068s</sub> | <sub>50.2 MB</sub> |
+| <sub>512×512</sub> | <sub>3→64</sub> | <sub>3×3</sub> | <sub>2.145s</sub> | <sub>0.187s</sub> | <sub>262 MB</sub> |
 
 **Notes:**
 - **First Run**: Includes MIOpen kernel compilation/search time
@@ -1147,14 +1147,14 @@ Successfully used for YOLOv8 training on LTDV2 dataset:
 
 ### Comparison: Direct Conv vs IMPLICIT_GEMM
 
-| Metric | Direct Conv (Default) | IMPLICIT_GEMM | Winner |
+| <sub>Metric</sub> | <sub>Direct Conv (Default)</sub> | <sub>IMPLICIT_GEMM</sub> | <sub>Winner</sub> |
 |--------|----------------------|---------------|---------|
-| **32×32 inputs** | ✅ 0.025s | ✅ 0.028s | Direct Conv |
-| **44×44 inputs** | ❌ Hangs forever | ✅ 0.031s | IMPLICIT_GEMM |
-| **224×224 inputs** | ❌ Hangs forever | ✅ 0.068s | IMPLICIT_GEMM |
-| **Memory usage** | 100% | 125% | Direct Conv |
-| **Reliability** | 0% (fails) | 100% | IMPLICIT_GEMM |
-| **First-run time** | 0.5s (if works) | 2.0s | Direct Conv |
+| <sub>**32×32 inputs**</sub> | <sub>✅ 0.025s</sub> | <sub>✅ 0.028s</sub> | <sub>Direct Conv</sub> |
+| <sub>**44×44 inputs**</sub> | <sub>❌ Hangs forever</sub> | <sub>✅ 0.031s</sub> | <sub>IMPLICIT_GEMM</sub> |
+| <sub>**224×224 inputs**</sub> | <sub>❌ Hangs forever</sub> | <sub>✅ 0.068s</sub> | <sub>IMPLICIT_GEMM</sub> |
+| <sub>**Memory usage**</sub> | <sub>100%</sub> | <sub>125%</sub> | <sub>Direct Conv</sub> |
+| <sub>**Reliability**</sub> | <sub>0% (fails)</sub> | <sub>100%</sub> | <sub>IMPLICIT_GEMM</sub> |
+| <sub>**First-run time**</sub> | <sub>0.5s (if works)</sub> | <sub>2.0s</sub> | <sub>Direct Conv</sub> |
 
 **Conclusion**: IMPLICIT_GEMM is slower on first run but provides **100% reliability** vs **0% reliability** for Direct Conv on RDNA1 with large inputs.
 
