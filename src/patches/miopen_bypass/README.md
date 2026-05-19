@@ -210,13 +210,13 @@ Success Rate: 100.0%
 
 ## 📈 Performance Comparison
 
-| Configuration | 44×44 Input | 224×224 Input | Reliability |
+| <sub>Configuration</sub> | <sub>44×44 Input</sub> | <sub>224×224 Input</sub> | <sub>Reliability</sub> |
 |---------------|-------------|---------------|-------------|
-| **Default MIOpen** | ❌ Hangs | ❌ Hangs | 0% |
-| **IMPLICIT_GEMM** | ✅ 0.031s | ✅ 0.068s | 100% |
-| **CPU Fallback** | ✅ 0.28s | ✅ 0.65s | 100% |
-| **Selective** | ✅ 0.031s | ✅ 0.068s | 100% |
-| **Auto** | ✅ 0.031s | ✅ 0.068s | 100% |
+| <sub>**Default MIOpen**</sub> | <sub>❌ Hangs</sub> | <sub>❌ Hangs</sub> | <sub>0%</sub> |
+| <sub>**IMPLICIT_GEMM**</sub> | <sub>✅ 0.031s</sub> | <sub>✅ 0.068s</sub> | <sub>100%</sub> |
+| <sub>**CPU Fallback**</sub> | <sub>✅ 0.28s</sub> | <sub>✅ 0.65s</sub> | <sub>100%</sub> |
+| <sub>**Selective**</sub> | <sub>✅ 0.031s</sub> | <sub>✅ 0.068s</sub> | <sub>100%</sub> |
+| <sub>**Auto**</sub> | <sub>✅ 0.031s</sub> | <sub>✅ 0.068s</sub> | <sub>100%</sub> |
 
 *First run +2s for kernel compilation (IMPLICIT_GEMM)*
 
@@ -237,12 +237,12 @@ config = Conv2dBypassConfig(
 
 ### Strategy Details
 
-| Strategy | Use Case | Performance | Reliability |
+| <sub>Strategy</sub> | <sub>Use Case</sub> | <sub>Performance</sub> | <sub>Reliability</sub> |
 |----------|----------|-------------|-------------|
-| `AUTO` | Default, recommended | Good | Excellent |
-| `IMPLICIT_GEMM` | Maximum speed | Excellent | Excellent |
-| `CPU_FALLBACK` | Maximum safety | Poor | Perfect |
-| `SELECTIVE` | Balanced | Good | Excellent |
+| <sub>`AUTO`</sub> | <sub>Default, recommended</sub> | <sub>Good</sub> | <sub>Excellent</sub> |
+| <sub>`IMPLICIT_GEMM`</sub> | <sub>Maximum speed</sub> | <sub>Excellent</sub> | <sub>Excellent</sub> |
+| <sub>`CPU_FALLBACK`</sub> | <sub>Maximum safety</sub> | <sub>Poor</sub> | <sub>Perfect</sub> |
+| <sub>`SELECTIVE`</sub> | <sub>Balanced</sub> | <sub>Good</sub> | <sub>Excellent</sub> |
 
 ## 📊 Monitoring Bypass Usage
 
