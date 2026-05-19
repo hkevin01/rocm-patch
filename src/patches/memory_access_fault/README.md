@@ -138,12 +138,12 @@ RDNA1/2 consumer GPUs have a hardware limitation:
 
 ## 📊 Performance Impact
 
-| Metric | Before Patch | After Patch | Notes |
+| <sub>Metric</sub> | <sub>Before Patch</sub> | <sub>After Patch</sub> | <sub>Notes</sub> |
 |--------|--------------|-------------|-------|
-| Crash Rate | 100% | <1% | 99% improvement |
-| GPU Speedup | N/A (crashes) | 8-10x vs CPU | Fully functional |
-| Memory Usage | N/A | +10% overhead | Safety buffers |
-| Training Speed | N/A | ~5-10% slower than native | vs theoretical max |
+| <sub>Crash Rate</sub> | <sub>100%</sub> | <sub><1%</sub> | <sub>99% improvement</sub> |
+| <sub>GPU Speedup</sub> | <sub>N/A (crashes)</sub> | <sub>8-10x vs CPU</sub> | <sub>Fully functional</sub> |
+| <sub>Memory Usage</sub> | <sub>N/A</sub> | <sub>+10% overhead</sub> | <sub>Safety buffers</sub> |
+| <sub>Training Speed</sub> | <sub>N/A</sub> | <sub>~5-10% slower than native</sub> | <sub>vs theoretical max</sub> |
 
 **Trade-off**: Small performance overhead for massive stability gain
 
@@ -259,9 +259,9 @@ Found an improvement? Please contribute!
 
 ## 📝 Changelog
 
-| Date | Version | Changes |
+| <sub>Date</sub> | <sub>Version</sub> | <sub>Changes</sub> |
 |------|---------|---------|
-| 2025-11-06 | 1.0.0 | Initial release - 99% crash reduction |
+| <sub>2025-11-06</sub> | <sub>1.0.0</sub> | <sub>Initial release - 99% crash reduction</sub> |
 
 ---
 
